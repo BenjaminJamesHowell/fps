@@ -4,7 +4,7 @@ const LEVEL_WIDTH = 500;
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const fps = 60;
+const fps = 30;
 
 canvas.width = LEVEL_WIDTH;
 canvas.height = LEVEL_HEIGHT;
@@ -16,12 +16,14 @@ const lines = [
 	_ => 50,
 	_ => 400,
 ];
-let player = { x: 150, y: 200 };
+let player = { x: 150, y: 200, direction: 0 };
 const keys = {
 	KeyW: false,
 	KeyA: false,
 	KeyS: false,
 	KeyD: false,
+	ArrowLeft: false,
+	ArrowRight: false,
 };
 
 startKeyListener();
@@ -61,6 +63,12 @@ function movePlayer() {
 	}
 	if (keys.KeyD) {
 		tryMovePlayerX(3);
+	}
+	if (keys.ArrowLeft) {
+		player.direction--;
+	}
+	if (keys.ArrowRight) {
+		player.direction++;
 	}
 }
 
@@ -147,7 +155,9 @@ function renderLevel() {
 
 	ctx.fillStyle = "blue";
 	ctx.fillRect(player.x, player.y, 1, 1);
-	raycast(player.x, player.y, Date.now(), 10, isTouchingLine, true);
+	for (let angle = -60; angle <= 60; angle += 5) {
+		raycast(player.x, player.y, angle + player.direction, 1000, isTouchingLine, true);
+	}
 }
 
 function isTouchingLine(x, y) {
@@ -171,7 +181,9 @@ function raycast(originX, originY, angle, maxDistance, isColliding, shouldPaint 
 	for (let distance = 1; distance <= maxDistance; distance++) {
 		prevX = x;
 		prevY = y;
-		x += Math.cos(angle * Math.PI / 180);
+		// These trig functions turn "move 1 pixel at this angle" into
+		// "move x and y by these distances".
+		x += Math.cos(angle * Math.PI / 180); // JS trig functions use radians instead of degrees.
 		y += Math.sin(angle * Math.PI / 180);
 
 		if (isColliding(x, y)) {
