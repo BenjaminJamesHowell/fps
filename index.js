@@ -1,6 +1,6 @@
 const CLEAR_COLOUR = "white";
-const LEVEL_HEIGHT = 500;
-const LEVEL_WIDTH = 500;
+const LEVEL_HEIGHT = innerHeight - 20;
+const LEVEL_WIDTH = innerWidth - 20;
 const VIEW_LIMIT = 1000;
 const FOV = 60;
 
