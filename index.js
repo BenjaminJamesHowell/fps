@@ -3,21 +3,24 @@ const LEVEL_HEIGHT = innerHeight - 20;
 const LEVEL_WIDTH = innerWidth - 20;
 const VIEW_LIMIT = 1000;
 const FOV = 60;
+const SHOULD_RENDER_3D = true;
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const fps = 30;
 
+let frame = 0;
+
 canvas.width = LEVEL_WIDTH;
 canvas.height = LEVEL_HEIGHT;
 
-// y = 5x + 1
-const lines = [
-	x => x - 100,
-	x => x + 100,
-	_ => 50,
-	_ => 400,
+const levelLinePoints = [
+	[[100, 100], [100, 300]],
+	[[100, 100], [300, 100]],
+	[[300, 100], [300, 300]],
+	[[100, 300], [300, 300]],
 ];
+const levelLineFunctions = [];
 let player = { x: 150, y: 200, direction: 0 };
 const keys = {
 	KeyW: false,
@@ -29,6 +32,7 @@ const keys = {
 };
 
 startKeyListener();
+initLevel();
 setInterval(gameUpdate, 1000 / fps);
 
 function startKeyListener() {
@@ -49,11 +53,38 @@ function startKeyListener() {
 	});
 }
 
+function initLevel() {
+	for (const [[x1, y1], [x2, y2]] of levelLinePoints) {
+		const yChange = y1 - y2;
+		const xChange = x1 - x2;
+		const gradient = yChange / xChange;
+		const yIntercept = y1 - (gradient * x1);
+		const xMin = Math.min(x1, x2);
+		const xMax = Math.max(x1, x2);
+		const yMin = Math.min(y1, y2);
+		const yMax = Math.max(y1, y2);
+
+		levelLineFunctions.push((x, y) => {
+			if (x > xMax + 1 || x < xMin - 1 || y > yMax + 1 || y < yMin - 1) {
+				return false;
+			}
+
+			if (x1 === x2) {
+				return true;
+			}
+			const lineY = gradient * x + yIntercept;
+			return lineY - 3 < y && lineY + 3 > y;
+		});
+	}
+}
+
 // GAME UPDATE: Called every frame
 // Any drawing to the canvas before renderLevel() is called will be cleared.
 function gameUpdate() {
 	movePlayer();
 	renderLevel();
+
+	frame++;
 }
 
 // COLLISION AND MOVEMENT
@@ -86,37 +117,29 @@ function movePlayer() {
 	}
 }
 
-function isTouchingLine(x, y) {
-	for (const line of lines) {
-		const lineY = line(x);
-		const isTouchingLine = lineY < y + 3 && lineY > y - 3;
-
-		if (isTouchingLine) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
 // RENDER: Called every frame after calculating movement.
 function renderLevel() {
 	ctx.clearRect(0, 0, LEVEL_WIDTH, LEVEL_HEIGHT);
 	let x = 0;
 	for (let angle = -(FOV / 2); angle <= FOV / 2; angle += 1) {
-		const { distance } = raycast(player.x, player.y, angle + player.direction, VIEW_LIMIT, isTouchingLine);
-		const wallHeight = 10000 / distance;
+		const { distance, didCollide } = raycast(player.x, player.y, angle + player.direction, VIEW_LIMIT, isTouchingLine, !SHOULD_RENDER_3D);
 		ctx.fillStyle = "blue";
-		ctx.fillRect(x, LEVEL_HEIGHT / 2 - wallHeight, LEVEL_WIDTH / FOV + 1, 2 * wallHeight);
+		if (!didCollide) {
+			x += LEVEL_WIDTH / FOV;
+			continue;
+		}
+		const wallHeight = 10000 / distance;
+		if (SHOULD_RENDER_3D) {
+			ctx.fillRect(x, LEVEL_HEIGHT / 2 - wallHeight, LEVEL_WIDTH / FOV + 1, 2 * wallHeight);
+		}
 
 		x += LEVEL_WIDTH / FOV;
 	}
 }
 
 function isTouchingLine(x, y) {
-	for (const line of lines) {
-		const lineY = line(x);
-		if (lineY + 1 > y && lineY - 1 < y) {
+	for (const line of levelLineFunctions) {
+		if (line(x, y)) {
 			return true;
 		}
 	}
@@ -145,6 +168,7 @@ function raycast(originX, originY, angle, maxDistance, isColliding, shouldPaint 
 				x: prevX,
 				y: prevY,
 				distance: distance - 1,
+				didCollide: true,
 			};
 		}
 
@@ -154,7 +178,7 @@ function raycast(originX, originY, angle, maxDistance, isColliding, shouldPaint 
 		}
 	}
 
-	return { x, y, distance: maxDistance };
+	return { x, y, distance: maxDistance, didCollide: false };
 }
 
 function limitDirection(direction) {
