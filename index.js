@@ -101,7 +101,7 @@ function renderLevel() {
 	let x = 0;
 	for (let angle = -(FOV / 2); angle <= FOV / 2; angle += 1) {
 		const { distance } = raycast(player.x, player.y, angle + player.direction, VIEW_LIMIT, isTouchingLine);
-		const wallHeight = 4000 / distance;
+		const wallHeight = 10000 / distance;
 		ctx.fillStyle = "blue";
 		ctx.fillRect(x, wallHeight, LEVEL_WIDTH / FOV + 1, 2 * wallHeight);
 
