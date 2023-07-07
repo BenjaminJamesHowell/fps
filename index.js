@@ -24,6 +24,9 @@ const keys = {
 	KeyD: false,
 };
 
+startKeyListener();
+setInterval(gameUpdate, 1000 / fps);
+
 function startKeyListener() {
 	addEventListener('keydown', ({code}) => {
 		if (Object.keys(keys).includes(code)) {
@@ -38,20 +41,14 @@ function startKeyListener() {
 	});
 }
 
-function renderLevel() {
-	ctx.clearRect(0, 0, LEVEL_WIDTH, LEVEL_HEIGHT);
-	ctx.fillStyle = "red";
-	for (let x = 0; x <= LEVEL_WIDTH; x++) {
-		for (const line of lines) {
-			const y = line(x);
-			ctx.fillRect(x, y, 1, 1);
-		}
-	}
-
-	ctx.fillStyle = "blue";
-	ctx.fillRect(player.x, player.y, 1, 1);
+// GAME UPDATE: Called every frame
+// Any drawing to the canvas before renderLevel() is called will be cleared.
+function gameUpdate() {
+	movePlayer();
+	renderLevel();
 }
 
+// COLLISION: It's really janky
 function movePlayer() {
 	if (keys.KeyW) {
 		tryMovePlayerY(-3);
@@ -137,11 +134,58 @@ function isTouchingLine(x, y) {
 	return false;
 }
 
-function gameUpdate() {
-	movePlayer();
-	renderLevel();
+// RENDER: Called every frame after calculating movement.
+function renderLevel() {
+	ctx.clearRect(0, 0, LEVEL_WIDTH, LEVEL_HEIGHT);
+	ctx.fillStyle = "red";
+	for (let x = 0; x <= LEVEL_WIDTH; x++) {
+		for (const line of lines) {
+			const y = line(x);
+			ctx.fillRect(x, y, 1, 1);
+		}
+	}
+
+	ctx.fillStyle = "blue";
+	ctx.fillRect(player.x, player.y, 1, 1);
+	raycast(player.x, player.y, Date.now(), 10, isTouchingLine, true);
 }
 
-startKeyListener();
-setInterval(gameUpdate, 1000 / fps);
+function isTouchingLine(x, y) {
+	for (const line of lines) {
+		const lineY = line(x);
+		if (lineY + 1 > y && lineY - 1 < y) {
+			return true;
+		}
+	}
 
+	return false;
+}
+
+// RAYCAST
+function raycast(originX, originY, angle, maxDistance, isColliding, shouldPaint = false) {
+	let x = originX;
+	let y = originY;
+	let prevX;
+	let prevY;
+
+	for (let distance = 1; distance <= maxDistance; distance++) {
+		prevX = x;
+		prevY = y;
+		x += Math.cos(angle * Math.PI / 180);
+		y += Math.sin(angle * Math.PI / 180);
+
+		if (isColliding(x, y)) {
+			return {
+				x: prevX,
+				y: prevY,
+			};
+		}
+
+		if (shouldPaint) {
+			ctx.fillStyle = "green";
+			ctx.fillRect(x, y, 1, 1);
+		}
+	}
+
+	return { x, y };
+}
