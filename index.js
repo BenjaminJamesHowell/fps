@@ -1,25 +1,25 @@
 const CLEAR_COLOUR = "white";
-const LEVEL_HEIGHT = innerHeight - 20;
-const LEVEL_WIDTH = innerWidth - 20;
+const LEVEL_HEIGHT = innerHeight;
+const LEVEL_WIDTH = innerWidth;
 const VIEW_LIMIT = 1000;
 const FOV = 60;
 const SHOULD_RENDER_3D = true;
+const TARGET_FPS = 30;
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const levelSelectDialogue = document.getElementById("level-select-dialogue");
 const levelSelectDialogueFile = document.getElementById("level-file-select");
+const fpsCounter = document.getElementById("fps-counter");
 const levelSelectDialogueSubmit = document.getElementById("level-select-submit");
-const fps = 30;
 
+let deltaTime = 0;
+let frameStartTime = 0;
+let actualFps = 0;
 let frame = 0;
-
-canvas.width = LEVEL_WIDTH;
-canvas.height = LEVEL_HEIGHT;
-
-const levelLines = [];
+let levelLines = [];
 let player = { x: 150, y: 200, direction: 0 };
-const keys = {
+let keys = {
 	KeyW: false,
 	KeyA: false,
 	KeyS: false,
@@ -28,10 +28,19 @@ const keys = {
 	ArrowRight: false,
 };
 
+canvas.width = LEVEL_WIDTH;
+canvas.height = LEVEL_HEIGHT;
+
+
 startKeyListener();
 loadLevel(level => {
 	initLevel(level);
-	setInterval(gameUpdate, 1000 / fps);
+	setInterval(() => {
+		deltaTime = performance.now() - frameStartTime;
+		frameStartTime = performance.now();
+		actualFps = (1 / deltaTime)* 1000;
+		gameUpdate();
+	}, 1000 / TARGET_FPS);
 });
 
 function startKeyListener() {
@@ -109,6 +118,7 @@ function initLevel(level) {
 // Any drawing to the canvas before renderLevel() is called will be cleared.
 function gameUpdate() {
 	movePlayer();
+	updateUI();
 	renderLevel();
 
 	frame++;
@@ -142,6 +152,11 @@ function movePlayer() {
 	if (keys.ArrowRight) {
 		player.direction += 10;
 	}
+}
+
+// UI
+function updateUI() {
+	fpsCounter.innerText = `FPS: ${Math.round(actualFps)}`;
 }
 
 // RENDER: Called every frame after calculating movement.

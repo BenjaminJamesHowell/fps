@@ -15,7 +15,6 @@
 				background-color: #222;
 				color: white;
 				margin: 0;
-				padding: 10px;
 				width: 100vw;
 				height: 100vh;
 			}
@@ -41,6 +40,16 @@
 				padding: 20px;
 				display: none;
 			}
+
+			#fps-counter {
+				background-color: #000000EE;
+				color: white;
+				border-radius: 3px;
+				padding: 20px;
+				position: fixed;
+				right: 5px;
+				top: 5px;
+			}
 		</style>
 	</head>
 
@@ -52,6 +61,7 @@
 				<button id="level-select-submit">Start</button>
 			</div>
 		</div>
+		<div id="fps-counter"></div>
 		<canvas id="canvas"></canvas>
 	</body>
 </html>
