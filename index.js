@@ -5,20 +5,41 @@ const VIEW_LIMIT = 1000;
 const FOV = 60;
 const SHOULD_RENDER_3D = true;
 const TARGET_FPS = 30;
+const LEVEL_URLS = [
+	"./levels/test.json",
+	"./levels/test2.json",
+	"./levels/empty.json",
+];
+const MENUS = {
+	NONE: undefined,
+	PAUSE: "pause",
+	SELECT_LEVEL: "select_level",
+};
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const levelSelectDialogue = document.getElementById("level-select-dialogue");
-const levelSelectDialogueFile = document.getElementById("level-file-select");
 const fpsCounter = document.getElementById("fps-counter");
-const levelSelectDialogueSubmit = document.getElementById("level-select-submit");
+
+const menuElements = {
+	dialogueRoot: document.getElementById("dialogue-root"),
+	select_level: {
+		dialogue: document.getElementById("level-select-dialogue"),
+		fileInput: document.getElementById("level-file-select"),
+		submitButton: document.getElementById("level-select-submit"),
+	},
+	pause: {
+		dialogue: document.getElementById("pause-dialogue"),
+		selectLevelButton: document.getElementById("pause-select-level-button")
+	}
+};
 
 let deltaTime = 0;
 let frameStartTime = 0;
 let actualFps = 0;
 let frame = 0;
 let levelLines = [];
-let player = { x: 150, y: 200, direction: 0 };
+let levelCache = {};
+let player = { x: 0, y: 0, direction: 0 };
 let keys = {
 	KeyW: false,
 	KeyA: false,
@@ -27,21 +48,19 @@ let keys = {
 	ArrowLeft: false,
 	ArrowRight: false,
 };
+let isPaused = false;
+let gameUpdateTimer;
+let menu = undefined;
 
 canvas.width = LEVEL_WIDTH;
 canvas.height = LEVEL_HEIGHT;
 
-
 startKeyListener();
-loadLevel(level => {
-	initLevel(level);
-	setInterval(() => {
-		deltaTime = performance.now() - frameStartTime;
-		frameStartTime = performance.now();
-		actualFps = (1 / deltaTime)* 1000;
-		gameUpdate();
-	}, 1000 / TARGET_FPS);
-});
+loadLevel(LEVEL_URLS[0])
+	.then(level => {
+		initLevel(level);
+		gameUpdateTimer = setInterval(gameUpdate, 1000 / TARGET_FPS);
+	});
 
 function startKeyListener() {
 	addEventListener('keydown', e => {
@@ -49,6 +68,10 @@ function startKeyListener() {
 			keys[e.code] = true;
 			e.preventDefault();
 			e.stopPropagation();
+		}
+
+		if (e.code === "KeyE") {
+			togglePause();
 		}
 	});
 
@@ -61,36 +84,108 @@ function startKeyListener() {
 	});
 }
 
-function loadLevel(callback) {
-	const cachedLevel = localStorage.getItem("FPS_MOST_RECENT_LEVEL");
-	if (cachedLevel === null) {
-		selectLevel(async file => {
-			const contents = await file.text();
-			const json = JSON.parse(contents);
-			localStorage.setItem("FPS_MOST_RECENT_LEVEL", contents);
-			callback(json);
-		});
+function togglePause() {
+	if (isPaused) {
+		unpause();
+	} else {
+		pause();
+	}
+}
+
+function pause() {
+	clearInterval(gameUpdateTimer);
+	isPaused = true;
+	openMenu(MENUS.PAUSE);
+}
+
+function unpause() {
+	gameUpdateTimer = setInterval(gameUpdate, 1000 / TARGET_FPS);
+	isPaused = false;
+	openMenu(MENUS.NONE);
+}
+
+function openMenu(newMenu) {
+	switch (newMenu) {
+		case MENUS.NONE: {
+			closeAllMenuElements();
+			menu = MENUS.NONE;
+			isPaused = false;
+			break;
+		}
+		case MENUS.PAUSE: {
+			closeAllMenuElements();
+			menu = MENUS.PAUSE;
+			openAllMenuElements(MENUS.PAUSE);
+			menuElements.pause.selectLevelButton.onclick = _ => {
+				openMenu(MENUS.SELECT_LEVEL);
+			};
+			break;
+		}
+
+		case MENUS.SELECT_LEVEL: {
+			closeAllMenuElements();
+			menu = MENUS.SELECT_LEVEL;
+			openAllMenuElements(MENUS.SELECT_LEVEL);
+			menuElements.select_level.submitButton.onclick = async _ => {
+				const files = menuElements.select_level.fileInput.files;
+				if (files.length !== 1) {
+					return;
+				}
+				const file = files[0];
+				const contents = await file.text();
+				const json = JSON.parse(contents);
+
+				initLevel(json);
+				unpause();
+			};
+
+			const levelButtons = menuElements.select_level.dialogue.querySelectorAll(".level-select");
+			console.log(levelButtons);
+			for (const button of levelButtons) {
+				button.onclick = async _ => {
+					const level = await loadLevel(button.getAttribute("data-level"));
+					initLevel(level);
+					unpause();
+				};
+			}
+			break;
+		}
+	}
+}
+
+function closeAllMenuElements() {
+	menuElements.dialogueRoot.style.display = "none";
+	if (menu === MENUS.NONE) {
 		return;
 	}
 
-	const json = JSON.parse(cachedLevel);
-	callback(json);
+	menuElements[menu].dialogue.style.display = "none";
 }
 
-function selectLevel(callback) {
-	levelSelectDialogue.style.display = "block";
-	levelSelectDialogueSubmit.onclick = async _ => {
-		const files = levelSelectDialogueFile.files;
-		if (files.length === 0) {
-			return;
-		}
-		levelSelectDialogue.style.display = "none";
-		callback(files[0]);
-	};
+function openAllMenuElements(newMenu) {
+	menuElements.dialogueRoot.style.display = "block";
+	if (newMenu === MENUS.NONE) {
+		return;
+	}
+
+	menuElements[newMenu].dialogue.style.display = "block";
+}
+
+async function loadLevel(path) {
+	if (levelCache[path] !== undefined) {
+		return JSON.parse(levelCache[path]);
+	}
+
+	const file = await (await fetch(path)).text();
+	levelCache[path] = file;
+
+	return JSON.parse(file);
 }
 
 function initLevel(level) {
-	for (const [[x1, y1], [x2, y2]] of level) {
+	levelLines = [];
+	player = {x: level.startingX, y: level.startingY, direction: level.startingDirection};
+	for (const [[x1, y1], [x2, y2]] of level.lines) {
 		const yChange = y1 - y2;
 		const xChange = x1 - x2;
 		const gradient = yChange / xChange;
@@ -117,6 +212,10 @@ function initLevel(level) {
 // GAME UPDATE: Called every frame
 // Any drawing to the canvas before renderLevel() is called will be cleared.
 function gameUpdate() {
+	deltaTime = performance.now() - frameStartTime;
+	frameStartTime = performance.now();
+	actualFps = (1 / deltaTime)* 1000;
+
 	movePlayer();
 	updateUI();
 	renderLevel();

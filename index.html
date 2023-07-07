@@ -23,22 +23,34 @@
 				background-color: white;
 			}
 
-			#dialogue {
+			#dialogue-root {
 				position: fixed;
 				top: 0;
 				left: 0;
-				width: 100%;
-				height: 100%;
+				width: 100vw;
+				height: 100vh;
+				background-color: #00000099;
+				color: white;
+				display: none;
+				padding-top: 300px;
 			}
 
 			#level-select-dialogue {
+				display: none;
+			}
+
+			#pause-dialogue {
+				display: none;
+			}
+
+			.dialogue {
 				background-color: #000000EE;
 				color: white;
 				margin: auto;
-				max-width: 700px;
+				max-width: 400px;
 				border-radius: 3px;
 				padding: 20px;
-				display: none;
+				text-align: center;
 			}
 
 			#fps-counter {
@@ -50,18 +62,73 @@
 				right: 5px;
 				top: 5px;
 			}
+
+			input[type=file] {
+				max-width: calc(50% - 10px);
+				margin-left: 10px;
+			}
+
+			button {
+				background-color: transparent;
+				color: white;
+				border-radius: 3px;
+				padding: 5px 20px;
+				display: block;
+				border: 1px solid white;
+				margin-top: 20px;
+				width: 100%;
+			}
+
+			label {
+				font-size: 14px;
+			}
+
+			hr {
+				border: none;
+				border-top: 1px solid white;
+				display: block;
+				margin-top: 20px;
+			}
+
+			.level-select {
+				display: inline;
+				width: calc(33% - 11px);
+				margin: 3px;
+			}
 		</style>
 	</head>
 
 	<body>
-		<div id="dialogue">
-			<div id="level-select-dialogue">
-				<h2>Level Select</h2>
+		<div id="dialogue-root">
+			<div class="dialogue" id="level-select-dialogue">
+				<h2>Select Level</h2>
+				<button
+					class="level-select"
+					data-level="./levels/test.json"
+				>1</button>
+				<button
+					class="level-select"
+					data-level="./levels/test2.json"
+				>2</button>
+				<button
+					class="level-select"
+					data-level="./levels/empty.json"
+				>3</button>
+
+				<hr>
+
+				<label for="level-file-select">Use level file: </label>
 				<input type="file" id="level-file-select" />
-				<button id="level-select-submit">Start</button>
+				<button id="level-select-submit">Open File</button>
+			</div>
+
+			<div class="dialogue" id="pause-dialogue">
+				<h2>Pause</h2>
+				<button id="pause-select-level-button">Select Level</button>
 			</div>
 		</div>
 		<div id="fps-counter"></div>
 		<canvas id="canvas"></canvas>
 	</body>
 </html>
+
