@@ -7,6 +7,9 @@ const SHOULD_RENDER_3D = true;
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const levelSelectDialogue = document.getElementById("level-select-dialogue");
+const levelSelectDialogueFile = document.getElementById("level-file-select");
+const levelSelectDialogueSubmit = document.getElementById("level-select-submit");
 const fps = 30;
 
 let frame = 0;
@@ -14,13 +17,7 @@ let frame = 0;
 canvas.width = LEVEL_WIDTH;
 canvas.height = LEVEL_HEIGHT;
 
-const levelLinePoints = [
-	[[100, 100], [100, 300]],
-	[[100, 100], [300, 100]],
-	[[300, 100], [300, 300]],
-	[[100, 300], [300, 300]],
-];
-const levelLineFunctions = [];
+const levelLines = [];
 let player = { x: 150, y: 200, direction: 0 };
 const keys = {
 	KeyW: false,
@@ -32,8 +29,10 @@ const keys = {
 };
 
 startKeyListener();
-initLevel();
-setInterval(gameUpdate, 1000 / fps);
+loadLevel(level => {
+	initLevel(level);
+	setInterval(gameUpdate, 1000 / fps);
+});
 
 function startKeyListener() {
 	addEventListener('keydown', e => {
@@ -53,8 +52,36 @@ function startKeyListener() {
 	});
 }
 
-function initLevel() {
-	for (const [[x1, y1], [x2, y2]] of levelLinePoints) {
+function loadLevel(callback) {
+	const cachedLevel = localStorage.getItem("FPS_MOST_RECENT_LEVEL");
+	if (cachedLevel === null) {
+		selectLevel(async file => {
+			const contents = await file.text();
+			const json = JSON.parse(contents);
+			localStorage.setItem("FPS_MOST_RECENT_LEVEL", contents);
+			callback(json);
+		});
+		return;
+	}
+
+	const json = JSON.parse(cachedLevel);
+	callback(json);
+}
+
+function selectLevel(callback) {
+	levelSelectDialogue.style.display = "block";
+	levelSelectDialogueSubmit.onclick = async _ => {
+		const files = levelSelectDialogueFile.files;
+		if (files.length === 0) {
+			return;
+		}
+		levelSelectDialogue.style.display = "none";
+		callback(files[0]);
+	};
+}
+
+function initLevel(level) {
+	for (const [[x1, y1], [x2, y2]] of level) {
 		const yChange = y1 - y2;
 		const xChange = x1 - x2;
 		const gradient = yChange / xChange;
@@ -64,7 +91,7 @@ function initLevel() {
 		const yMin = Math.min(y1, y2);
 		const yMax = Math.max(y1, y2);
 
-		levelLineFunctions.push((x, y) => {
+		levelLines.push((x, y) => {
 			if (x > xMax + 1 || x < xMin - 1 || y > yMax + 1 || y < yMin - 1) {
 				return false;
 			}
@@ -138,7 +165,7 @@ function renderLevel() {
 }
 
 function isTouchingLine(x, y) {
-	for (const line of levelLineFunctions) {
+	for (const line of levelLines) {
 		if (line(x, y)) {
 			return true;
 		}

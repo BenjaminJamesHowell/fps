@@ -7,6 +7,10 @@
 				box-sizing: border-box;
 			}
 
+			h2 {
+				margin-top: 0;
+			}
+
 			body {
 				background-color: #222;
 				color: white;
@@ -19,10 +23,35 @@
 			canvas {
 				background-color: white;
 			}
+
+			#dialogue {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+
+			#level-select-dialogue {
+				background-color: #000000EE;
+				color: white;
+				margin: auto;
+				max-width: 700px;
+				border-radius: 3px;
+				padding: 20px;
+				display: none;
+			}
 		</style>
 	</head>
 
 	<body>
+		<div id="dialogue">
+			<div id="level-select-dialogue">
+				<h2>Level Select</h2>
+				<input type="file" id="level-file-select" />
+				<button id="level-select-submit">Start</button>
+			</div>
+		</div>
 		<canvas id="canvas"></canvas>
 	</body>
 </html>
