@@ -1,6 +1,8 @@
 const CLEAR_COLOUR = "white";
 const LEVEL_HEIGHT = 500;
 const LEVEL_WIDTH = 500;
+const VIEW_LIMIT = 1000;
+const FOV = 60;
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -96,18 +98,14 @@ function isTouchingLine(x, y) {
 // RENDER: Called every frame after calculating movement.
 function renderLevel() {
 	ctx.clearRect(0, 0, LEVEL_WIDTH, LEVEL_HEIGHT);
-	ctx.fillStyle = "red";
-	for (let x = 0; x <= LEVEL_WIDTH; x++) {
-		for (const line of lines) {
-			const y = line(x);
-			ctx.fillRect(x, y, 1, 1);
-		}
-	}
+	let x = 0;
+	for (let angle = -(FOV / 2); angle <= FOV / 2; angle += 1) {
+		const { distance } = raycast(player.x, player.y, angle + player.direction, VIEW_LIMIT, isTouchingLine);
+		const wallHeight = 4000 / distance;
+		ctx.fillStyle = "blue";
+		ctx.fillRect(x, wallHeight, LEVEL_WIDTH / FOV + 1, 2 * wallHeight);
 
-	ctx.fillStyle = "blue";
-	ctx.fillRect(player.x, player.y, 1, 1);
-	for (let angle = -60; angle <= 60; angle += 5) {
-		raycast(player.x, player.y, angle + player.direction, 1000, isTouchingLine, true);
+		x += LEVEL_WIDTH / FOV;
 	}
 }
 
@@ -142,6 +140,7 @@ function raycast(originX, originY, angle, maxDistance, isColliding, shouldPaint 
 			return {
 				x: prevX,
 				y: prevY,
+				distance: distance - 1,
 			};
 		}
 
@@ -151,7 +150,7 @@ function raycast(originX, originY, angle, maxDistance, isColliding, shouldPaint 
 		}
 	}
 
-	return { x, y };
+	return { x, y, distance: maxDistance };
 }
 
 function limitDirection(direction) {
@@ -164,3 +163,4 @@ function limitDirection(direction) {
 
 	return direction;
 }
+
