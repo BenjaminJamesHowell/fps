@@ -32,15 +32,19 @@ startKeyListener();
 setInterval(gameUpdate, 1000 / fps);
 
 function startKeyListener() {
-	addEventListener('keydown', ({code}) => {
-		if (Object.keys(keys).includes(code)) {
-			keys[code] = true;
+	addEventListener('keydown', e => {
+		if (Object.keys(keys).includes(e.code)) {
+			keys[e.code] = true;
+			e.preventDefault();
+			e.stopPropagation();
 		}
 	});
 
-	addEventListener('keyup', ({code}) => {
-		if (Object.keys(keys).includes(code)) {
-			keys[code] = false;
+	addEventListener('keyup', e => {
+		if (Object.keys(keys).includes(e.code)) {
+			keys[e.code] = false;
+			e.preventDefault();
+			e.stopPropagation();
 		}
 	});
 }
