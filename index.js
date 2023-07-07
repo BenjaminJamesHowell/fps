@@ -50,83 +50,34 @@ function gameUpdate() {
 	renderLevel();
 }
 
-// COLLISION: It's really janky
+// COLLISION AND MOVEMENT
 function movePlayer() {
 	if (keys.KeyW) {
-		tryMovePlayerY(-3);
+		const { x, y } = raycast(player.x, player.y, player.direction, 10, isTouchingLine, false);
+		player.x = x;
+		player.y = y;
 	}
 	if (keys.KeyS) {
-		tryMovePlayerY(3);
+		const { x, y } = raycast(player.x, player.y, player.direction - 180, 10, isTouchingLine, false);
+		player.x = x;
+		player.y = y;
 	}
 	if (keys.KeyA) {
-		tryMovePlayerX(-3);
+		const { x, y } = raycast(player.x, player.y, player.direction - 90, 10, isTouchingLine, false);
+		player.x = x;
+		player.y = y;
 	}
 	if (keys.KeyD) {
-		tryMovePlayerX(3);
+		const { x, y } = raycast(player.x, player.y, player.direction + 90, 10, isTouchingLine, false);
+		player.x = x;
+		player.y = y;
 	}
 	if (keys.ArrowLeft) {
-		player.direction--;
+		player.direction -= 10;
 	}
 	if (keys.ArrowRight) {
-		player.direction++;
+		player.direction += 10;
 	}
-}
-
-function tryMovePlayerX(distance) {
-	if (distance === 0) {
-		return;
-	}
-
-	let allowedDistance = 0;
-
-	if (distance > 0) {
-		for (let x = player.x; x <= player.x + distance; x++) {
-			if (isTouchingLine(x + 1, player.y)) {
-				break;
-			}
-
-			allowedDistance++;
-		}
-	} else {
-		for (let x = player.x; x >= player.x + distance; x--) {
-			if (isTouchingLine(x - 1, player.y)) {
-				break;
-			}
-
-			allowedDistance--;
-		}
-	}
-
-	player.x += allowedDistance;
-}
-
-
-function tryMovePlayerY(distance) {
-	if (distance === 0) {
-		return;
-	}
-
-	let allowedDistance = 0;
-
-	if (distance > 0) {
-		for (let y = player.y; y <= player.y + distance; y++) {
-			if (isTouchingLine(player.x, y + 1)) {
-				break;
-			}
-
-			allowedDistance++;
-		}
-	} else {
-		for (let y = player.y; y >= player.y + distance; y--) {
-			if (isTouchingLine(player.x, y - 1)) {
-				break;
-			}
-
-			allowedDistance--;
-		}
-	}
-
-	player.y += allowedDistance;
 }
 
 function isTouchingLine(x, y) {
@@ -173,6 +124,7 @@ function isTouchingLine(x, y) {
 
 // RAYCAST
 function raycast(originX, originY, angle, maxDistance, isColliding, shouldPaint = false) {
+	angle = limitDirection(angle);
 	let x = originX;
 	let y = originY;
 	let prevX;
@@ -200,4 +152,15 @@ function raycast(originX, originY, angle, maxDistance, isColliding, shouldPaint 
 	}
 
 	return { x, y };
+}
+
+function limitDirection(direction) {
+	while (direction < 0) {
+		direction += 360;
+	}
+	while (direction >= 360) {
+		direction -= 360;
+	}
+
+	return direction;
 }
