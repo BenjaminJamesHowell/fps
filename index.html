@@ -2,6 +2,9 @@
 <html>
 	<head>
 		<script src="./index.js" defer></script>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Ubuntu&display=swap" rel="stylesheet"> 
 		<style>
 			* {
 				box-sizing: border-box;
@@ -17,6 +20,7 @@
 				margin: 0;
 				width: 100vw;
 				height: 100vh;
+				font-family: 'Ubuntu', Arial, Helvetica, sans-serif;
 			}
 
 			canvas {
@@ -54,7 +58,7 @@
 			}
 
 			#fps-counter {
-				background-color: #000000EE;
+				background-color: #00000099;
 				color: white;
 				border-radius: 3px;
 				padding: 20px;
@@ -95,6 +99,42 @@
 				width: calc(33% - 11px);
 				margin: 3px;
 			}
+
+			#view-source {
+				color: black;
+				position: fixed;
+				bottom: 5px;
+				left: 5px;
+				text-decoration: none;
+			}
+
+			#controls {
+				color: black;
+				position: fixed;
+				bottom: 5px;
+				right: 5px;
+				padding-right: 10px;
+			}
+
+			#controls ul {
+				margin: 0;
+				padding: 0;
+			}
+
+			#controls li {
+				list-style-type: none;
+				margin: 10px 0;
+				padding: 0;
+			}
+
+			#controls span {
+				background-color: #00000099;
+				color: white;
+				font-size: 12px;
+				border-radius: 3px;
+				padding: 3px 5px;
+				margin: 0 5px;
+			}
 		</style>
 	</head>
 
@@ -127,7 +167,22 @@
 				<button id="pause-select-level-button">Select Level</button>
 			</div>
 		</div>
+		<div id="controls">
+			<ul>
+				<li>
+					<span>WASD</span> Move
+				</li>
+				<li>
+					<span>Left/Right Arrow</span> Look
+				</li>
+				<li>
+					<span>E</span> Pause
+				</li>
+			</ul>
+		</div>
 		<div id="fps-counter"></div>
+		<a href="https://github.com/BenjaminJamesHowell/fps"
+			id="view-source" target="_blank">View Source</a>
 		<canvas id="canvas"></canvas>
 	</body>
 </html>
