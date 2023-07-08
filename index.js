@@ -4,7 +4,6 @@ const LEVEL_WIDTH = innerWidth;
 const VIEW_LIMIT = 1000;
 const FOV = 60;
 const SHOULD_RENDER_3D = true;
-const TARGET_FPS = 30;
 const LEVEL_URLS = [
 	"./levels/test.json",
 	"./levels/test2.json",
@@ -239,31 +238,32 @@ function gameUpdate(now) {
 
 // COLLISION AND MOVEMENT
 function movePlayer() {
+	const speed = Math.round(10 * deltaTime * 0.01);
 	if (keys.KeyW) {
-		const { x, y } = raycast(player.x, player.y, player.direction, 10, isTouchingLine, false);
+		const { x, y } = raycast(player.x, player.y, player.direction, speed, isTouchingLine, false);
 		player.x = x;
 		player.y = y;
 	}
 	if (keys.KeyS) {
-		const { x, y } = raycast(player.x, player.y, player.direction - 180, 10, isTouchingLine, false);
+		const { x, y } = raycast(player.x, player.y, player.direction - 180, speed, isTouchingLine, false);
 		player.x = x;
 		player.y = y;
 	}
 	if (keys.KeyA) {
-		const { x, y } = raycast(player.x, player.y, player.direction - 90, 10, isTouchingLine, false);
+		const { x, y } = raycast(player.x, player.y, player.direction - 90, speed, isTouchingLine, false);
 		player.x = x;
 		player.y = y;
 	}
 	if (keys.KeyD) {
-		const { x, y } = raycast(player.x, player.y, player.direction + 90, 10, isTouchingLine, false);
+		const { x, y } = raycast(player.x, player.y, player.direction + 90, speed, isTouchingLine, false);
 		player.x = x;
 		player.y = y;
 	}
 	if (keys.ArrowLeft) {
-		player.direction -= 10;
+		player.direction -= speed;
 	}
 	if (keys.ArrowRight) {
-		player.direction += 10;
+		player.direction += speed;
 	}
 }
 
