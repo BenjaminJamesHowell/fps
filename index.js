@@ -15,10 +15,14 @@ const MENUS = {
 	PAUSE: "pause",
 	SELECT_LEVEL: "select_level",
 };
+const IMAGE_URLS = {
+	wall: "./images/wall.png"
+};
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const fpsCounter = document.getElementById("fps-counter");
+const images = {};
 
 const menuElements = {
 	dialogueRoot: document.getElementById("dialogue-root"),
@@ -49,17 +53,17 @@ let keys = {
 	ArrowRight: false,
 };
 let isPaused = false;
-let gameUpdateTimer;
 let menu = undefined;
 
 canvas.width = LEVEL_WIDTH;
 canvas.height = LEVEL_HEIGHT;
 
 startKeyListener();
+loadTextures();
 loadLevel(LEVEL_URLS[0])
 	.then(level => {
 		initLevel(level);
-		gameUpdateTimer = setInterval(gameUpdate, 1000 / TARGET_FPS);
+		requestAnimationFrame(gameUpdate);
 	});
 
 function startKeyListener() {
@@ -84,6 +88,14 @@ function startKeyListener() {
 	});
 }
 
+function loadTextures() {
+	for (const imageName in IMAGE_URLS) {
+		const image = new Image();
+		image.src = IMAGE_URLS[imageName];
+		images[imageName] = image;
+	}
+}
+
 function togglePause() {
 	if (isPaused) {
 		unpause();
@@ -93,14 +105,13 @@ function togglePause() {
 }
 
 function pause() {
-	clearInterval(gameUpdateTimer);
 	isPaused = true;
 	openMenu(MENUS.PAUSE);
 }
 
 function unpause() {
-	gameUpdateTimer = setInterval(gameUpdate, 1000 / TARGET_FPS);
 	isPaused = false;
+	requestAnimationFrame(gameUpdate);
 	openMenu(MENUS.NONE);
 }
 
@@ -211,9 +222,9 @@ function initLevel(level) {
 
 // GAME UPDATE: Called every frame
 // Any drawing to the canvas before renderLevel() is called will be cleared.
-function gameUpdate() {
-	deltaTime = performance.now() - frameStartTime;
-	frameStartTime = performance.now();
+function gameUpdate(now) {
+	deltaTime = now - frameStartTime;
+	frameStartTime = now;
 	actualFps = (1 / deltaTime)* 1000;
 
 	movePlayer();
@@ -221,6 +232,9 @@ function gameUpdate() {
 	renderLevel();
 
 	frame++;
+	if (!isPaused) {
+		requestAnimationFrame(gameUpdate);
+	}
 }
 
 // COLLISION AND MOVEMENT
@@ -271,7 +285,13 @@ function renderLevel() {
 		}
 		const wallHeight = 10000 / distance;
 		if (SHOULD_RENDER_3D) {
-			ctx.fillRect(x, LEVEL_HEIGHT / 2 - wallHeight, LEVEL_WIDTH / FOV + 1, 2 * wallHeight);
+			ctx.drawImage(
+				images.wall,
+				x,
+				LEVEL_HEIGHT / 2 - wallHeight,
+				LEVEL_WIDTH / FOV + 1,
+				2 * wallHeight,
+			);
 		}
 
 		x += LEVEL_WIDTH / FOV;
