@@ -194,7 +194,7 @@ async function loadLevel(path) {
 
 function initLevel(level) {
 	levelLines = [];
-	player = {x: level.startingX, y: level.startingY, direction: level.startingDirection};
+	player = { x: level.startingX, y: level.startingY, direction: level.startingDirection };
 	for (const [[x1, y1], [x2, y2]] of level.lines) {
 		const yChange = y1 - y2;
 		const xChange = x1 - x2;
@@ -224,7 +224,7 @@ function initLevel(level) {
 function gameUpdate(now) {
 	deltaTime = now - frameStartTime;
 	frameStartTime = now;
-	actualFps = (1 / deltaTime)* 1000;
+	actualFps = (1 / deltaTime) * 1000;
 
 	movePlayer();
 	updateUI();
@@ -285,8 +285,8 @@ function renderLevel() {
 		}
 		const wallHeight = 10000 / distance;
 		if (SHOULD_RENDER_3D) {
-			ctx.drawImage(
-				images.wall,
+			ctx.fillStyle = `hsl(0, 0%, ${Math.max(20, Math.min(80, Math.floor(wallHeight)))}%)`;
+			ctx.fillRect(
 				x,
 				LEVEL_HEIGHT / 2 - wallHeight,
 				LEVEL_WIDTH / FOV + 1,
