@@ -41,6 +41,7 @@ let frameStartTime = 0;
 let actualFps = 0;
 let frame = 0;
 let levelLines = [];
+let levelLinePoints = [];
 let levelCache = {};
 let player = { x: 0, y: 0, direction: 0 };
 let keys = {
@@ -194,6 +195,7 @@ async function loadLevel(path) {
 
 function initLevel(level) {
 	levelLines = [];
+	levelLinePoints = [];
 	player = { x: level.startingX, y: level.startingY, direction: level.startingDirection };
 	for (const [[x1, y1], [x2, y2]] of level.lines) {
 		const yChange = y1 - y2;
@@ -205,6 +207,7 @@ function initLevel(level) {
 		const yMin = Math.min(y1, y2);
 		const yMax = Math.max(y1, y2);
 
+		levelLinePoints.push([[x1, y1], [x2, y2]]);
 		levelLines.push((x, y) => {
 			if (x > xMax + 1 || x < xMin - 1 || y > yMax + 1 || y < yMin - 1) {
 				return false;
@@ -283,7 +286,7 @@ function renderLevel() {
 			x += LEVEL_WIDTH / FOV;
 			continue;
 		}
-		const wallHeight = 10000 / distance;
+		const wallHeight = 20000 / distance;
 		if (SHOULD_RENDER_3D) {
 			ctx.fillStyle = `hsl(0, 0%, ${Math.max(20, Math.min(80, Math.floor(wallHeight)))}%)`;
 			ctx.fillRect(
@@ -295,6 +298,16 @@ function renderLevel() {
 		}
 
 		x += LEVEL_WIDTH / FOV;
+	}
+
+	if (!SHOULD_RENDER_3D) {
+		for (const [[ax, ay], [bx, by]] of levelLinePoints) {
+			ctx.beginPath();
+			ctx.moveTo(ax, ay);
+			ctx.lineTo(bx, by);
+			ctx.strokeStyle = "red";
+			ctx.stroke();
+		}
 	}
 }
 
